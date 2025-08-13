@@ -1,14 +1,15 @@
-import streamlit as st
-# 同樣把之前的函式 import 進來：
-from bm25_version1 import search_context, generate_prompt, call_qwen
+from flask import Flask, render_template, request
+from bm25_version1 import search_bm25
 
-st.title("台大資工系法規助理")
-st.write("請輸入你的問題，我會根據法規資料回答。")
+app = Flask(__name__)
 
-question = st.text_input("學生問題：")
-if st.button("送出"):
-    with st.spinner("系統思考中…"):
-        ctx = search_context(question)
-        prompt = generate_prompt(question, ctx)
-        answer = call_qwen(prompt)
-    st.text_area("助理回答：", value=answer, height=200)
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    result = ""
+    if request.method == 'POST':
+        query = request.form['query']
+        result = search_bm25(query)
+    return render_template('index.html', result=result)
+
+if __name__ == '__main__':
+    app.run(debug=True)
