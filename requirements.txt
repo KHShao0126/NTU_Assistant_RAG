@@ -7,3 +7,6 @@ flask-cors
 scikit-learn
 pandas
 numpy
+rank_bm25
+pymupdf
+jieba
