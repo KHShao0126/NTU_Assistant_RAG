@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NTU Assistant System</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- 頂部欄 -->
+  <header class="app-header">
+    <div class="brand">NTU&nbsp;<b>Assistant</b>&nbsp;System</div>
+    <div class="header-actions">
+      <!-- 保留右上角空間以後可放設定 -->
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <!-- 左側：對話列表 -->
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <button id="new-chat" class="primary">＋ 新對話</button>
+      </div>
+      <div id="conv-list" class="conv-list"></div>
+    </aside>
+
+    <!-- 右側：聊天主區 -->
+    <main class="chat-area">
+      <div id="chat-box" class="chat-box"></div>
+
+      <div class="input-row">
+        <input id="user-input" placeholder="輸入你的問題..." />
+        <button id="send-btn" aria-label="送出">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+            <path d="M2 12l19-9-9 19-2-7-8-3z"></path>
+          </svg>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

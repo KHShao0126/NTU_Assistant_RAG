@@ -1,18 +1,9 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[2]:
-
-
-
-
-# In[7]:
-
-
 import os
 import json
 import re
 from typing import List, Dict, Optional
+
+chat_history = []
 
 try:
     import fitz  # PyMuPDF
@@ -154,18 +145,6 @@ class BM25DocumentRetriever:
         return "\n\n---\n\n".join(formatted_docs)
     
 
-
-
-
-
-
-
-
-
-
-# In[9]:
-
-
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import torch
 import json
@@ -222,18 +201,49 @@ llm = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_toke
 
 
 
+def _extract_titles_from_context(context: str):
+    # 例："[Document 1] 某某規章.pdf (score=0.812)"
+    import re
+    return re.findall(r"\[Document\s+\d+\]\s*(.*?)\s*\(score=", context or "")
 
 
 
+def generate_prompt(user_input, context, conversation_history):
+    # --- 防呆：確保是 list[dict] ---
+    if not isinstance(conversation_history, list):
+        conversation_history = []
+    cleaned_history = []
+    for turn in conversation_history:
+        if isinstance(turn, dict) and "user" in turn and "assistant" in turn:
+            cleaned_history.append({"user": str(turn["user"]), "assistant": str(turn["assistant"])})
+        elif isinstance(turn, (list, tuple)) and len(turn) == 2:
+            cleaned_history.append({"user": str(turn[0]), "assistant": str(turn[1])})
+        else:
+            # 不合法就忽略
+            continue
+    titles = _extract_titles_from_context(context)
+    if titles:
+        print("【參考文件】")
+        for i, t in enumerate(titles, 1):
+            print(f"{i}. {t}")
+    else:
+        print("【參考文件】無")
 
-def generate_prompt(question, context):
+    print("【學生問題】", user_input)
+    history_str = ""
+    for turn in cleaned_history:
+        history_str += f"使用者：{turn['user']}\n法規助理：{turn['assistant']}\n"
+    print("【對話歷史】", history_str if history_str else "無")
     return f"""你是一位台大資工系的法規助理，請根據以下資料回答學生的問題。
+
+[對話歷史]
+{history_str}
 
 [法規資料]
 {context}
 
 [學生問題]
-{question}
+{user_input}
 
 請給出準確、清楚的回覆，若資料不足，請說明還需要哪些學生資訊。回答要簡潔，去除你覺得不相關的資訊，一定不用多餘的說明。"""
 
@@ -244,13 +254,13 @@ def call_qwen(prompt):
         {"role": "user", "content": prompt}
     ]
 
-    # ✅ 1. 產生聊天格式 prompt（純文字）
+    #  1. 產生聊天格式 prompt（純文字）
     chat_prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
-    # ✅ 2. 用 tokenizer 編碼成 input_ids + attention_mask
+    #  2. 用 tokenizer 編碼成 input_ids + attention_mask
     encoded = tokenizer(chat_prompt, return_tensors="pt").to(model.device)
 
-    # ✅ 3. 模型產生
+    #  3. 模型產生
     outputs = model.generate(
         input_ids=encoded["input_ids"],
         attention_mask=encoded["attention_mask"],
@@ -258,18 +268,19 @@ def call_qwen(prompt):
         do_sample=False
     )
 
-    # ✅ 4. 解碼結果
+    #  4. 解碼結果
     output_ids = outputs[0]
     response = tokenizer.decode(output_ids, skip_special_tokens=True)
 
-    # ✅ 5. 移除 prompt 前綴（可選）
+    #  5. 移除 prompt 前綴（可選）
     if "assistant" in response:
         response = response.split("assistant")[-1].strip()
 
     return response
 
-# ✅ 測試範例（使用 BM25 擷取 top-k chunk 作為 context）
-question = "我現在學士班大三，沒有輔系，已經修了83學分，我還差多少才能畢業？"
+#  測試範例（使用 BM25 擷取 top-k document 作為 context）
+#question = "我現在學士班大三，沒有輔系，已經修了83學分，我還差多少才能畢業？"
+"""question = "通識課可以當一般選修嗎？"
 retriever = BM25DocumentRetriever(pdf_folder="./台大資工相關規範", corpus_path="bm25_docs_new.json")
 retriever.build_or_load_corpus()
 retriever.build_index()
@@ -282,20 +293,25 @@ for i, r in enumerate(results, 1):
 print("\nContext to feed the LLM (trimmed per doc):")
 context = retriever.build_context(question, k=5, max_chars_per_doc=2000)
 print(context[:2000])
-prompt = generate_prompt(question, context)
+prompt = generate_prompt(question, context, chat_history)
 answer = call_qwen(prompt)
 
-print("🤖 回答：")
-print(answer)
+# 更新歷史
+#chat_history.append({"user": question, "assistant": answer})
+
+#print("🤖 回答：")
+#print(answer)
+
+
 
 
 # In[10]:
 
 
-# ✅ 測試範例
-#question = "告訴我推徵資工所的相關規定"
-#prompt = generate_prompt(question, context)
+#  測試範例
+#question = "幫我規劃剩下的學分該如何修完"
+#prompt = generate_prompt(question, context, chat_history)
 #answer = call_qwen(prompt)
 
 #print("🤖 回答：")
-#print(answer)
+#print(answer)"""

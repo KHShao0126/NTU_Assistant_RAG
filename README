@@ -1,13 +1,17 @@
 # 台大法規助理 
 
-一個使用 RAG 技術、結合 Qwen 模型的台大法規問答系統。
+一個使用 RAG 技術、結合 LLaMA 模型的台大法規問答系統。
 
 Use bm25 algorithm to retrieve the top 5 relevant documents from the 台大資工相關規範, then use Qwen/Qwen1.5-7B-Chat model to answer the question based on the retrieved documents.
 The relevant score depends on the content of the documents and the question asked.
 
 
 ## TODO
-- [ ] 加入來源段落 metadata
-- [ ] 建立 UI
 - [ ] 增加更多資料
-- [ ] 可對話系統
+- [ ] 用法規資料pre-train LLM
+- [ ] 加入來源段落 metadata
+- [ ] 加入reranker 讓餵給 LLM 的內容更精準
+- [ ] 嘗試其他retrieval method
+- [ ] 嘗試其他 LLM 模型
+- [ ] 辨認無關的要求
+- [ ] 辨認不需要查找資料就可以回答的問題 以免被資料誤導
