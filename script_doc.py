@@ -1,39 +1,31 @@
-import os
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+import os, urllib3
 
-# 目標頁面
-url = "https://www.aca.ntu.edu.tw/w/aca/RulesSet?subMenuId=21060316015673770"
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# 建立儲存資料夾
-os.makedirs("ntu_rules_pdfs", exist_ok=True)
+url = "https://www.aca.ntu.edu.tw/w/aca/CDRules"
+save_dir = "./ntu_rules_pdfs"
+os.makedirs(save_dir, exist_ok=True)
 
-# 發送 GET 請求
-headers = {
-    "User-Agent": "Mozilla/5.0"
-}
-res = requests.get(url, headers=headers)
-res.encoding = "utf-8"  # 確保中文正確顯示
-soup = BeautifulSoup(res.text, "html.parser")
+resp = requests.get(url, verify=False)  # ⚠️ 關閉 SSL 驗證
+resp.raise_for_status()
+soup = BeautifulSoup(resp.text, "html.parser")
 
-# 抓出所有 PDF 連結
-pdf_links = soup.find_all("a", href=True)
-count = 0
+links = []
+for a in soup.find_all("a", href=True):
+    href = a["href"]
+    text = a.get_text(strip=True)
+    if href.lower().endswith((".pdf", ".odt")):
+        full_url = requests.compat.urljoin(url, href)
+        links.append((text, full_url))
 
-for link in pdf_links:
-    href = link["href"]
-    if href.endswith(".pdf"):
-        pdf_url = urljoin(url, href)
-        pdf_name = pdf_url.split("/")[-1]
-
-        print(f"下載中：{pdf_name}")
-        pdf_res = requests.get(pdf_url)
-        if pdf_res.status_code == 200:
-            with open(os.path.join("ntu_rules_pdfs", pdf_name), "wb") as f:
-                f.write(pdf_res.content)
-                count += 1
-        else:
-            print(f"⚠️ 無法下載：{pdf_url}")
-
-print(f"\n✅ 完成，共下載 {count} 個 PDF 檔案！")
+for i, (text, link) in enumerate(links, 1):
+    print(f"{i}. {text}: {link}")
+    fname = os.path.basename(link.split("?")[0])
+    path = os.path.join(save_dir, fname)
+    if not os.path.exists(path):
+        r = requests.get(link, verify=False)
+        with open(path, "wb") as f:
+            f.write(r.content)
+        print(f"   -> Saved to {path}")

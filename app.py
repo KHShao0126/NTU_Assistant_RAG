@@ -6,7 +6,7 @@ from bm25_version1_LLama3 import BM25DocumentRetriever, generate_prompt, call_qw
 app = Flask(__name__)
 app.secret_key = 'ntu-secret-key-123'
 
-retriever = BM25DocumentRetriever(pdf_folder="./台大資工相關規範", corpus_path="bm25_docs.json")
+retriever = BM25DocumentRetriever(pdf_folder="./ntu_rules_pdfs", corpus_path="bm25_docs_big.json")
 retriever.build_or_load_corpus()
 retriever.build_index()
 

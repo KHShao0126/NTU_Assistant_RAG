@@ -54,7 +54,7 @@ class BM25DocumentRetriever:
     def __init__(
         self,
         pdf_folder: str = "./ntu_rules_pdfs",
-        corpus_path: str = "bm25_docs_new.json",
+        corpus_path: str = "bm25_docs_big.json",
         tokenizer=default_tokenize,
     ) -> None:
         self.pdf_folder = pdf_folder
@@ -105,7 +105,7 @@ class BM25DocumentRetriever:
         tokenized_docs = [self.tokenize(d["text"]) for d in self.documents]
         self._bm25 = BM25Okapi(tokenized_docs)
 
-    def search(self, query: str, k: int = 5) -> List[Dict[str, object]]:
+    def search(self, query: str, k: int = 3) -> List[Dict[str, object]]:
         """Return top-k most relevant documents by BM25 score.
 
         Response schema per item:
@@ -129,7 +129,7 @@ class BM25DocumentRetriever:
             })
         return results
 
-    def build_context(self, query: str, k: int = 5, max_chars_per_doc: Optional[int] = 6000) -> str:
+    def build_context(self, query: str, k: int = 3, max_chars_per_doc: Optional[int] = 6000) -> str:
         """Build a concatenated context from top-k documents with optional per-doc trimming.
 
         This is useful if you want to pass entire documents (or trimmed versions) to an LLM.
@@ -170,10 +170,11 @@ except Exception:
 MODEL = None
 TOKENIZER = None
 
-# 載入 Qwen or Llama 模型
-model_id = "meta-llama/Llama-3.1-8B-Instruct"
+# 載入模型
+model_id = "meta-llama/Llama-3.1-8B"
+#model_id = "JungZoona/T3Q-qwen2.5-14b-v1.0-e3"
 
-# 選擇裝置（優先 CUDA，其次 Apple MPS，最後 CPU）
+# 選擇裝置（CUDA，Apple MPS，CPU）
 if torch.cuda.is_available():
     device = "cuda"
 elif getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
@@ -209,7 +210,6 @@ def _extract_titles_from_context(context: str):
 
 
 def generate_prompt(user_input, context, conversation_history):
-    # --- 防呆：確保是 list[dict] ---
     if not isinstance(conversation_history, list):
         conversation_history = []
     cleaned_history = []
@@ -219,7 +219,6 @@ def generate_prompt(user_input, context, conversation_history):
         elif isinstance(turn, (list, tuple)) and len(turn) == 2:
             cleaned_history.append({"user": str(turn[0]), "assistant": str(turn[1])})
         else:
-            # 不合法就忽略
             continue
     titles = _extract_titles_from_context(context)
     if titles:
@@ -245,7 +244,7 @@ def generate_prompt(user_input, context, conversation_history):
 [學生問題]
 {user_input}
 
-請給出準確、清楚的回覆，若資料不足，請說明還需要哪些學生資訊。回答要簡潔，去除你覺得不相關的資訊，一定不用多餘的說明。"""
+請給出準確、清楚的回覆，若資料不足，請說明還需要哪些學生資訊。回答要簡潔，若法規資料中有跟學生問題無關的請忽略，一定不用多餘的說明。"""
 
 
 def call_qwen(prompt):
@@ -280,8 +279,8 @@ def call_qwen(prompt):
 
 #  測試範例（使用 BM25 擷取 top-k document 作為 context）
 #question = "我現在學士班大三，沒有輔系，已經修了83學分，我還差多少才能畢業？"
-"""question = "通識課可以當一般選修嗎？"
-retriever = BM25DocumentRetriever(pdf_folder="./台大資工相關規範", corpus_path="bm25_docs_new.json")
+question = "資料結構與演算法是資工系幾年級的必修課"
+retriever = BM25DocumentRetriever(pdf_folder="./ntu_rules_pdfs", corpus_path="bm25_docs_big.json")
 retriever.build_or_load_corpus()
 retriever.build_index()
 results = retriever.search(question, k=5)
@@ -299,8 +298,8 @@ answer = call_qwen(prompt)
 # 更新歷史
 #chat_history.append({"user": question, "assistant": answer})
 
-#print("🤖 回答：")
-#print(answer)
+print("🤖 回答：")
+print(answer)
 
 
 
@@ -315,3 +314,6 @@ answer = call_qwen(prompt)
 
 #print("🤖 回答：")
 #print(answer)"""
+
+
+#114
