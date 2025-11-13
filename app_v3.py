@@ -147,7 +147,12 @@ def ask():
     history.append({"role": "assistant", "content": reply})
     session.modified = True
 
-    return jsonify({"response": reply, "cid": cid})
+    return jsonify({
+                "response": reply,
+                "cid": cid,
+                "bm25_titles": [r["doc_id"] for r in retriever.search(user_input, k=5)],
+                "refined_context": refined_context
+            })
 
 @app.route("/api/conversations/<cid>", methods=["DELETE"])
 def delete_conversation(cid):
