@@ -172,7 +172,7 @@ TOKENIZER = None
 
 # 載入模型
 model_id = "meta-llama/Llama-3.1-8B-Instruct"
-#model_id = "JungZoona/T3Q-qwen2.5-14b-v1.0-e3"
+#model_id = "google/gemma-3-12b-it"
 
 # 選擇裝置（CUDA，Apple MPS，CPU）
 if torch.cuda.is_available():
@@ -274,7 +274,7 @@ def call_qwen(prompt):
 
 #  測試範例（使用 BM25 擷取 top-k document 作為 context）
 #question = "我現在學士班大三，沒有輔系，已經修了83學分，我還差多少才能畢業？"
-question = "探索學分可以用在微積分上嗎"
+question = "一學期想要修超過25學分的資格是什麼？"
 retriever = BM25DocumentRetriever(pdf_folder="./ntu_rules_pdfs", corpus_path="bm25_docs_big.json")
 retriever.build_or_load_corpus()
 retriever.build_index()
