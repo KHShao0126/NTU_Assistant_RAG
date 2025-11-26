@@ -10,8 +10,10 @@
   <!-- 頂部欄 -->
   <header class="app-header">
     <div class="brand">NTU&nbsp;<b>Assistant</b>&nbsp;System</div>
+
+    <!-- 🔥 新增：右上角頭像按鈕 -->
     <div class="header-actions">
-      <!-- 保留右上角空間以後可放設定 -->
+        <button id="profile-btn" class="avatar-btn">👤</button>
     </div>
   </header>
 
@@ -27,18 +29,85 @@
     <!-- 右側：聊天主區 -->
     <main class="chat-area">
       <div id="chat-box" class="chat-box"></div>
+        <div id="pdf-bar" style="
+          display:none;
+          padding:10px 20px;
+          background:#151515;
+          border-top:1px solid #333;
+          font-size:14px;
+        "></div>
 
-      <div class="input-row">
-        <input id="user-input" placeholder="輸入你的問題..." />
-        <button id="send-btn" aria-label="送出">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
-            <path d="M2 12l19-9-9 19-2-7-8-3z"></path>
-          </svg>
-        </button>
+      <!-- 輸入列 + Top-K 工具列 -->
+      <div class="chatgpt-input-wrapper">
+        <div class="chatgpt-input-container">
+          <textarea id="user-input" placeholder="" rows="1"></textarea>
+          <button id="send-btn" aria-label="送出">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <path d="M2 12l19-9-9 19-2-7-8-3z"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Top-K 工具列（緊貼輸入列，永遠看得到） -->
+        <div class="toolbar">
+          <span class="k-label">Top-K</span>
+
+          <!-- 滑桿 -->
+          <input id="topkRange" type="range" min="1" max="50" value="5" class="k-range" />
+
+          <!-- 數字框（權威來源；送出時以它為準） -->
+          <input id="topkNumber" type="number" min="1" max="50" value="5" class="k-number" />
+
+          <!-- 備用：舊 JS 讀用的 kInput（隱藏但同步） -->
+          <input id="kInput" type="number" min="1" max="50" value="5" class="k-hidden" />
+        </div>
+
       </div>
     </main>
   </div>
 
+  <!-- 參考資料彈窗 -->
+  <div id="refModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <h3>參考資料</h3>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
   <script src="/static/script.js"></script>
+  <div id="profileModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeProfile()">&times;</span>
+      <h3>個人資料設定</h3>
+
+      <label>入學年份：</label>
+      <select id="p_year">
+        <option value="110">110</option>
+        <option value="111">111</option>
+        <option value="112">112</option>
+        <option value="113">113</option>
+        <option value="114">114</option>
+      </select>
+
+      <label>學位：</label>
+      <select id="p_degree">
+        <option value="學士">學士</option>
+        <option value="碩士">碩士</option>
+        <option value="博士">博士</option>
+      </select>
+
+      <label>學院：</label>
+      <select id="p_college"></select>
+
+      <label>學系：</label>
+      <select id="p_dept"></select>
+
+      <label>學號：</label>
+      <input type="text" id="p_sid" placeholder="例如：B12902999">
+
+      <button id="profile-save" class="primary">儲存</button>
+    </div>
+  </div>
 </body>
 </html>
