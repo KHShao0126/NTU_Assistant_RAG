@@ -4,3 +4,4 @@ __pycache__/
 .env
 /embedding/*.json
 /embedding/*.index
+/continual_pretraining/outputs/

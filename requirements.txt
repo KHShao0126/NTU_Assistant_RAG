@@ -9,4 +9,12 @@ pandas
 numpy
 rank_bm25
 pymupdf
+pdfplumber
 jieba
+accelerate
+bitsandbytes
+peft
+datasets 
+huggingface_hub 
+tokenizers 
+sentencepiece
