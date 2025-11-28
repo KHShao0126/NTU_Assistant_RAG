@@ -211,11 +211,13 @@ body {
 .chat-message { margin: 10px 0; display: flex; }
 .chat-message.user { justify-content: flex-end; }
 .chat-message .bubble {
-  max-width: 70ch;
+  max-width: 140ch;
   padding: 12px 14px;
   border-radius: var(--radius);
   box-shadow: 0 0 5px #000;
   background: var(--bubble-assistant);
+  white-space: pre-wrap;   /* ⬅️ 這行超重要 */
+  line-height: 1.6;
 }
 .chat-message.user .bubble {
   background: var(--bubble-user);
@@ -348,3 +350,259 @@ body {
 }
 .icon-btn:hover { background: rgba(255,255,255,0.16); }
 .icon-btn.danger:hover { background: rgba(255, 71, 87, 0.35); }
+
+/* ========== 📘 參考資料彈窗樣式 ========== */
+.modal {
+  display: none; /* 預設隱藏 */
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #1e1e1e;
+  color: #f0f0f0;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 700px;
+  width: 90%;
+  max-height: 80%;
+  overflow-y: auto;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.3s ease;
+}
+
+.close-btn {
+  float: right;
+  font-size: 24px;
+  cursor: pointer;
+  color: #bbb;
+}
+
+.close-btn:hover {
+  color: #fff;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+
+/* ===== 💬 ChatGPT 輸入欄樣式 ===== */
+.chatgpt-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  background: linear-gradient(to top, #1b1b1b, transparent);
+  border-top: 1px solid #2a2a2a;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+}
+
+.chatgpt-input-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 24px;
+  padding: 10px 14px;
+  width: 80%;
+  max-width: 900px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+}
+
+.chatgpt-input-container:focus-within {
+  border-color: #0a84ff;
+  box-shadow: 0 0 20px rgba(10, 132, 255, 0.3);
+}
+
+.chatgpt-input-container textarea {
+  flex: 1;
+  resize: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  font-size: 15px;
+  line-height: 1.4;
+  padding-right: 12px;
+  font-family: system-ui, "Noto Sans TC", sans-serif;
+}
+
+.chatgpt-input-container button {
+  background: var(--primary);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.25s ease;
+}
+
+.chatgpt-input-container button:hover {
+  background: #0071e3;
+}
+
+.input-hint {
+  color: #888;
+  font-size: 12px;
+  margin-top: 6px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.toolbar { display:flex; align-items:center; gap:8px; margin:8px 0; }
+.k-label { font-size:12px; opacity:.8; }
+.k-input {
+  width:72px; padding:6px 8px; border-radius:8px; border:1px solid #444;
+  background:#1f1f1f; color:#eaeaea;
+}
+
+/* 助理泡泡可點擊顯示手勢 */
+.bubble.clickable { cursor:pointer; box-shadow:0 0 0 1px rgba(255,255,255,.07) inset; }
+.bubble.clickable:hover { background:rgba(255,255,255,.04); }
+
+
+
+.close-btn {
+  background:transparent; color:#aaa; border:0; font-size:18px; cursor:pointer;
+}
+.close-btn:hover { color:#fff; }
+
+/* 送出時鎖住按鈕的視覺狀態 */
+#send-btn.is-sending { opacity:.6; pointer-events:none; }
+
+/* ===== Top-K 工具列 ===== */
+.toolbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:8px 0 2px;
+}
+
+.k-label{
+  font-size:12px;
+  color:#c9ced6;
+  opacity:.9;
+}
+
+.k-range{
+  width:240px;
+}
+
+.k-number{
+  width:72px;
+  background:#111418;
+  color:#e7eaee;
+  border:1px solid #2a2f36;
+  border-radius:8px;
+  padding:6px 8px;
+}
+
+.k-hidden{
+  display:none; /* 讓舊的 kInput 保留但不占位 */
+}
+
+.pdf-inline-bar {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #cfd2dc;
+}
+
+.pdf-inline-bar a {
+  color: #0a84ff;
+  text-decoration: underline;
+}
+
+.pdf-inline-bar a:hover {
+  text-decoration: none;
+  opacity: 0.9;
+}
+
+/* ===== 助理訊息下方的 PDF 連結列 ===== */
+.pdf-links-row {
+  margin-top: 6px;
+  padding: 6px 10px;
+  max-width: 70ch;
+  border-radius: 10px;
+  background: #151515;
+  font-size: 13px;
+  color: #d0d0d0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 讓訊息可在同一行放泡泡 + 三點按鈕 */
+.chat-message {
+  display: flex;
+  margin: 10px 0;
+}
+
+.chat-message.assistant {
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+/* 讓泡泡內文字保留換行（如果你改用 <br> 也沒差，但這樣更穩） */
+.chat-message .bubble {
+  white-space: pre-wrap;
+}
+
+/* 三個點點按鈕樣式 */
+.msg-menu-btn {
+  margin-left: 6px;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #aaaaaa;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.msg-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.avatar-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+#profileModal .modal-content {
+  width: 400px;
+}
+
+#profileModal select,
+#profileModal input {
+  width: 100%;
+  margin: 5px 0 15px 0;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #222;
+  color: white;
+}

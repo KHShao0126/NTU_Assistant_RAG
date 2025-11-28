@@ -2,6 +2,7 @@ import os
 import json
 import re
 from typing import List, Dict, Optional
+from flask import session
 
 chat_history = []
 
@@ -228,7 +229,7 @@ def generate_prompt(user_input, context, conversation_history):
     for turn in cleaned_history:
         history_str += f"使用者：{turn['user']}\n法規助理：{turn['assistant']}\n"
     print("【對話歷史】", history_str if history_str else "無")
-    return f"""你是一位台大資工系的法規助理，請根據以下資料回答學生的問題。
+    return f"""你是一位台大學生的法規助理，請根據以下資料回答學生的問題。
 
 [對話歷史]
 {history_str}
@@ -243,10 +244,29 @@ def generate_prompt(user_input, context, conversation_history):
 
 
 def call_qwen(prompt):
-    messages = [
-        {"role": "system", "content": "你是台大資工系的法規助理，請根據資料回答問題。 提出問題的都是台大資工的學生"},
-        {"role": "user", "content": prompt}
-    ]
+    profile = session.get("profile", {})
+
+    year = profile.get("year", "（未設定入學年份）")
+    degree = profile.get("degree", "（未設定學位）")
+    college = profile.get("college", "（未設定學院）")
+    dept = profile.get("dept", "（未設定學系）")
+    sid = profile.get("sid", "（未設定學號）")
+
+    system_prompt = f"""
+    你是一位台大學生的法規助理。
+    學生背景如下：
+    - 入學年份：{year}
+    - 學位：{degree}
+    - 學院：{college}
+    - 學系：{dept}
+    - 學號：{sid}
+
+    請盡可能根據學生的身分給出更貼近情況的建議。
+    """
+
+    print(system_prompt)
+
+    messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}]
 
     #  1. 產生聊天格式 prompt（純文字）
     chat_prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
@@ -272,49 +292,56 @@ def call_qwen(prompt):
 
     return response
 
+
 #  測試範例（使用 BM25 擷取 top-k document 作為 context）
 #question = "我現在學士班大三，沒有輔系，已經修了83學分，我還差多少才能畢業？"
-question = "一學期想要修超過25學分的資格是什麼？"
-retriever = BM25DocumentRetriever(pdf_folder="./ntu_rules_pdfs", corpus_path="bm25_docs_big.json")
-retriever.build_or_load_corpus()
-retriever.build_index()
-results = retriever.search(question, k=5)
-print("Top-5 documents:")
-for i, r in enumerate(results, 1):
-    preview = r["text"][:120].replace("\n", " ")
-    print(f"{i}. {r['doc_id']}  score={r['score']:.3f}  preview={preview}{'...' if len(r['text'])>120 else ''}")
+#question = "一學期想要修超過25學分的資格是什麼？"
+#retriever = BM25DocumentRetriever(pdf_folder="./ntu_rules_pdfs", corpus_path="bm25_docs_big.json")
+#retriever.build_or_load_corpus()
+#retriever.build_index()
+#results = retriever.search(question, k=5)
+#print("Top-5 documents:")
+#for i, r in enumerate(results, 1):
+    #preview = r["text"][:120].replace("\n", " ")
+    #print(f"{i}. {r['doc_id']}  score={r['score']:.3f}  preview={preview}{'...' if len(r['text'])>120 else ''}")
 
-print("\nContext to feed the LLM (trimmed per doc):")
-context = retriever.build_context(question, k=5, max_chars_per_doc=2000)
-print(context[:2000])
+#print("\nContext to feed the LLM (trimmed per doc):")
+#context = retriever.build_context(question, k=5, max_chars_per_doc=2000)
+#print(context[:2000])
 
 
 # --------------- 新增：LLM Reranking 條文選段階段 ---------------
 
 def llm_rerank_relevant_passages(query: str, bm25_context: str) -> str:
+    print(bm25_context)
     """使用同一個模型，根據問題在 BM25 context 中選出最相關條文。"""
-    rerank_prompt = f"""你是一位負責資料擷取的助理。你的回答只要保留與學生問題直接相關的條文或段落。忽略與問題無關的內容。不要加任何解釋或分析。
+    rerank_prompt = f"""你是一位負責資料擷取的助理。你負責從文件中保留與學生問題直接相關的條文或段落。忽略與問題無關的內容。不要加任何解釋或分析。
 
 [學生問題]
 {query}
 
 [文件]
-{bm25_context}
+{bm25_context}\n\n
+
+請以 
+根據[Document X] pdf檔名 相關內容 
+的格式，輸出與學生問題最相關的條文或段落。
 """
     print("\n====== LLM 條文選段階段 ======")
     selected_text = call_qwen(rerank_prompt)
     print(selected_text)
     return selected_text
 
-refined_context = llm_rerank_relevant_passages(question, context)
-prompt = generate_prompt(question, refined_context, chat_history)
-answer = call_qwen(prompt)
+#refined_context = llm_rerank_relevant_passages(question, context)
+#prompt = generate_prompt(question, refined_context, chat_history)
+#answer = call_qwen(prompt)
 
 # 更新歷史
 #chat_history.append({"user": question, "assistant": answer})
 
-print("🤖 回答：")
-print(answer)
+#print("🤖 回答：")
+#print(answer)
+#print(refined_context)
 
 
 
